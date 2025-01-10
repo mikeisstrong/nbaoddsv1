@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Odds Viewer</title>
+    <style>
+        body {
+            font-family: 'Monaco', monospace;
+            background-color: #000000;
+            color: #00FF00;
+            margin: 20px;
+            padding: 0;
+        }
+        h1 {
+            text-align: center;
+            color: #00FF00;
+            border-bottom: 1px solid #00FF00;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #00FF00;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #000000;
+            color: #00FF00;
+        }
+        td {
+            background-color: #000000;
+            color: #00FF00;
+        }
+        .highlight {
+            background-color: #FF0000;
+            color: #FFFFFF;
+        }
+        .highlight-light {
+            background-color: #FFA500;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <h1>Apple II Odds Viewer</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Home Team</th>
+                <th>Away Team</th>
+                <th>Best Home Odds</th>
+                <th>Best Away Odds</th>
+                <th>Average Home Odds</th>
+                <th>Average Away Odds</th>
+                <th>Total Implied Probability</th>
+                <th>Arbitrage Opportunity</th>
+            </tr>
+        </thead>
+        <tbody id="odds-table">
+        </tbody>
+    </table>
+
+    <script>
+        // Load the JSON data
+        fetch('odds_output.json')
+            .then(response => response.json())
+            .then(data => {
+                const table = document.getElementById('odds-table');
+                data.forEach(event => {
+                    const row = document.createElement('tr');
+                    const avgHomeProbability = (event.average_home_odds.implied_percentage * 100).toFixed(2);
+                    const avgAwayProbability = (event.average_away_odds.implied_percentage * 100).toFixed(2);
+
+                    const homeClass = avgHomeProbability > 80 
+                        ? 'highlight' 
+                        : avgHomeProbability >= 70 && avgHomeProbability < 80 
+                            ? 'highlight-light' 
+                            : '';
+
+                    const awayClass = avgAwayProbability > 80 
+                        ? 'highlight' 
+                        : avgAwayProbability >= 70 && avgAwayProbability < 80 
+                            ? 'highlight-light' 
+                            : '';
+
+                    row.innerHTML = `
+                        <td>${event.home_team}</td>
+                        <td>${event.away_team}</td>
+                        <td>${event.best_home_odds.odds} (${(event.best_home_odds.implied_percentage * 100).toFixed(2)}%) - ${event.best_home_odds.bookmaker}</td>
+                        <td>${event.best_away_odds.odds} (${(event.best_away_odds.implied_percentage * 100).toFixed(2)}%) - ${event.best_away_odds.bookmaker}</td>
+                        <td class="${homeClass}">${event.average_home_odds.odds.toFixed(2)} (${avgHomeProbability}%)</td>
+                        <td class="${awayClass}">${event.average_away_odds.odds.toFixed(2)} (${avgAwayProbability}%)</td>
+                        <td>${(event.total_implied_probability * 100).toFixed(2)}%</td>
+                        <td>${event.arbitrage_opportunity ? 'Yes' : 'No'}</td>
+                    `;
+                    table.appendChild(row);
+                });
+            })
+            .catch(error => console.error('Error loading JSON:', error));
+    </script>
+</body>
+</html>
